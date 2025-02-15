@@ -16,6 +16,7 @@ type Options struct {
 	Keys     string
 	Strategy string
 	Patch    string
+	Tee      bool
 }
 
 func (o Options) Validate() bool {
@@ -35,6 +36,7 @@ func main() {
 	flag.StringVar(&opt.Keys, "keys", "", "primary keys (comma-separated)")
 	flag.StringVar(&opt.Strategy, "strategy", "keys", "compare strategy (keys/all)")
 	flag.StringVar(&opt.Patch, "patch", "", "patch options: (i)nsert, (u)pdate, (d)elete")
+	flag.BoolVar(&opt.Tee, "tee", false, "output to file")
 	flag.Parse()
 
 	if !opt.Validate() {
@@ -82,13 +84,19 @@ func main() {
 		}
 	}
 
+	output := os.Stdout
+	if opt.Tee {
+		output, err = os.Create(fmt.Sprintf("%s.%s.output.txt", opt.Left, opt.Right))
+		defer output.Close()
+	}
+
 	diff := internal.NewDiff(
 		left,
 		right,
 		opt.Table,
 		primaryKeys,
 		internal.CompareStrategy(opt.Strategy),
-		os.Stdout,
+		output,
 	)
 
 	patch, err := diff.Compare(patchOptions)

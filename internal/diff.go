@@ -131,14 +131,16 @@ func (d *Diff) Compare(patchOptions PatchOption) (*Patch, error) {
 				forwardLeft = true
 				forwardRight = true
 			} else {
-				if rightRecord.IsBefore(leftRecord, d.primaryKeys) {
-					fmt.Fprintf(d.output, "+++ %s\n", rightRecord.String())
-					p.ToInsert = append(p.ToInsert, rightRecord)
-					forwardRight = true
-				} else if leftRecord.IsBefore(rightRecord, d.primaryKeys) {
-					fmt.Fprintf(d.output, "--- %s\n", leftRecord.String())
-					p.ToDelete = append(p.ToDelete, leftRecord)
-					forwardLeft = true
+				if !leftRecord.Equals(rightRecord, d.primaryKeys) {
+					if rightRecord.IsBefore(leftRecord, d.primaryKeys) {
+						fmt.Fprintf(d.output, "+++ %s\n", rightRecord.String())
+						p.ToInsert = append(p.ToInsert, rightRecord)
+						forwardRight = true
+					} else if leftRecord.IsBefore(rightRecord, d.primaryKeys) {
+						fmt.Fprintf(d.output, "--- %s\n", leftRecord.String())
+						p.ToDelete = append(p.ToDelete, leftRecord)
+						forwardLeft = true
+					}
 				} else {
 					fmt.Fprintf(d.output, ">>> %s\n", rightRecord.String())
 					u := rightRecord.Subset(d.primaryKeys, cmp)
