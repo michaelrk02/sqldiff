@@ -121,9 +121,18 @@ func (r *Record) IsBefore(other *Record, primaryKeys []string) bool {
 		otherValues = append(otherValues, other.Value(k))
 	}
 
-	isBefore := true
+	if r.Equals(other, primaryKeys) {
+		return false
+	}
+
+	isBefore := false
 	for i := range primaryKeys {
-		isBefore = isBefore && rValues[i].IsBefore(otherValues[i])
+		equalsPK := true
+		if i > 0 {
+			equalsPK = r.Equals(other, primaryKeys[:i])
+		}
+
+		isBefore = isBefore || equalsPK && rValues[i].IsBefore(otherValues[i])
 	}
 
 	return isBefore
